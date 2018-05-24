@@ -1,8 +1,12 @@
 package AT.MSev.FoodExpoil;
 
+import AT.MSev.Mango.MangoUtils;
+import AT.MSev.Mango.NBTManager;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagString;
+import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,28 +26,26 @@ import java.util.Locale;
 import static org.bukkit.Bukkit.getLogger;
 
 public class Handler implements Listener {
-
+    static  SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
     @EventHandler
     public void OnFoodPickup(EntityPickupItemEvent e)
     {
         if(e.getItem().getItemStack().getType().isEdible())
         {
-            net.minecraft.server.v1_12_R1.ItemStack nbt = CraftItemStack.asNMSCopy(e.getItem().getItemStack());
-            if(nbt.hasTag() && nbt.getTag().hasKey("Expires")) return;
+            Item pickedup = e.getItem();
+            if(NBTManager.GetTag(pickedup.getItemStack(), "Expires") != null) return;
 
             final Calendar expDate = Calendar.getInstance();
             expDate.add(Calendar.SECOND, 5);
-            final SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-            NBTTagCompound newNBT = new NBTTagCompound();
-            newNBT.set("Expires", new NBTTagString("" + sdf.format(expDate.getTime())));
-            nbt.setTag(newNBT);
-            e.getItem().remove();
-            ItemStack pickup = CraftItemStack.asBukkitCopy(nbt);
-            ItemMeta im = pickup.getItemMeta();
-            im.setLore(new ArrayList<String>() {{add("Expires" + sdf.format(expDate.getTime()));}});
-            pickup.setItemMeta(im);
-            ((Player)e.getEntity()).getInventory().addItem(pickup);
-            getLogger().info("" +sdf.format(expDate.getTime()));
+
+            ItemStack pickedupCopy = NBTManager.AddItemNBT(pickedup.getItemStack(), "Expires", new NBTTagString("" + sdf.format(expDate.getTime())));
+
+            pickedup.remove();
+            MangoUtils.ItemRelore(pickedupCopy,
+                new ArrayList<String>() {{add("Expires" + sdf.format(expDate.getTime()));}});
+
+            ((Player)e.getEntity()).getInventory().addItem(pickedupCopy);
+
             e.setCancelled(true);
         }
     }
@@ -51,15 +53,14 @@ public class Handler implements Listener {
     @EventHandler
     public void OnFoodEat(PlayerItemConsumeEvent e)
     {
-        net.minecraft.server.v1_12_R1.ItemStack nbt = CraftItemStack.asNMSCopy(e.getItem());
-        if(nbt.hasTag() && nbt.getTag().hasKey("Expires"))
+        String eatenExpDate = NBTManager.FromNBTString((NBTTagString) NBTManager.GetTag(e.getItem(), "Expires"));
+        if(eatenExpDate != null)
         {
             Calendar expDate = Calendar.getInstance();
-            String expDateString = nbt.getTag().getString("Expires");
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             try {
-                if (expDate.getTime().after(sdf.parse(expDateString))) {
-                    e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.POISON, 4, 2));
+                if (expDate.getTime().after(sdf.parse(eatenExpDate))) {
+                    e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.POISON, 80, 2));
+                    e.getPlayer().sendMessage(ChatColor.RED + "You ate expired food!");
                 }
             }catch (Exception ex) {getLogger().info(ex.getMessage());}
         }
