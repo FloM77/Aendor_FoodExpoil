@@ -11,6 +11,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,27 +29,32 @@ import java.util.Locale;
 import static org.bukkit.Bukkit.getLogger;
 
 public class Handler implements Listener {
-    static  SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+    static  SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH z yyyy", Locale.ENGLISH);
     @EventHandler
     public void OnFoodPickup(EntityPickupItemEvent e)
     {
-        if(e.getItem().getItemStack().getType().isEdible())
+        Item pickedup = e.getItem();
+        if(pickedup.getItemStack().getType().isEdible())
         {
-            Item pickedup = e.getItem();
             if(NBTManager.GetTag(pickedup.getItemStack(), "Expires") != null) return;
 
-            final Calendar expDate = Calendar.getInstance();
-            expDate.add(Calendar.SECOND, 5);
-
-            ItemStack pickedupCopy = NBTManager.AddItemNBT(pickedup.getItemStack(), "Expires", new NBTTagString("" + sdf.format(expDate.getTime())));
-
+            ItemStack pickedupCopy = ExpirableFood(pickedup.getItemStack(), Calendar.HOUR, 2);
             pickedup.remove();
-            MangoUtils.ItemRelore(pickedupCopy,
-                new ArrayList<String>() {{add("Expires" + sdf.format(expDate.getTime()));}});
-
             ((Player)e.getEntity()).getInventory().addItem(pickedupCopy);
 
             e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void OnFoodMove(InventoryClickEvent e)
+    {
+        ItemStack moved = e.getCurrentItem();
+        if(moved.getType().isEdible())
+        {
+            if(NBTManager.GetTag(moved, "Expires") != null) return;
+            ItemStack movedCopy = ExpirableFood(moved, Calendar.HOUR, 2);
+            e.setCurrentItem(movedCopy);
         }
     }
 
@@ -64,5 +72,17 @@ public class Handler implements Listener {
                 }
             }catch (Exception ex) {getLogger().info(ex.getMessage());}
         }
+    }
+
+    ItemStack ExpirableFood(ItemStack food, int field, int amount)
+    {
+        final Calendar expDate = Calendar.getInstance();
+        expDate.add(field, amount);
+
+        ItemStack expFood = NBTManager.AddItemNBT(food, "Expires", new NBTTagString("" + sdf.format(expDate.getTime())));
+
+        MangoUtils.ItemRelore(expFood,
+                new ArrayList<String>() {{add("Expires " + sdf.format(expDate.getTime()));}});
+        return expFood;
     }
 }
