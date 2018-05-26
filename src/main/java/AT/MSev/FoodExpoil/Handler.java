@@ -2,6 +2,7 @@ package AT.MSev.FoodExpoil;
 
 import AT.MSev.Mango.MangoUtils;
 import AT.MSev.Mango.NBTManager;
+import net.md_5.bungee.api.chat.ClickEvent;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagString;
 import org.bukkit.ChatColor;
@@ -10,7 +11,9 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
@@ -20,6 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import javax.swing.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -50,6 +54,7 @@ public class Handler implements Listener {
     public void OnFoodMove(InventoryClickEvent e)
     {
         ItemStack moved = e.getCurrentItem();
+        if(e.getAction().equals(InventoryAction.NOTHING) || e.getAction().equals(InventoryAction.DROP_ONE_CURSOR) || e.getAction().equals(InventoryAction.DROP_ALL_CURSOR)) return;
         if(moved.getType().isEdible())
         {
             if(NBTManager.GetTag(moved, "Expires") != null) return;
