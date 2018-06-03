@@ -25,9 +25,9 @@
         <dependency>
             <groupId>AT.MSev</groupId>
             <artifactId>MangoPlugin</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../#AENDOR/target/MangoPlugin-1.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/../##Mango_core/target/Mango_Core-1.0.jar</systemPath>
         </dependency>
         <!--Bukkit API-->
         <dependency>

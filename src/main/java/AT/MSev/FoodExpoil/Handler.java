@@ -1,7 +1,7 @@
 package AT.MSev.FoodExpoil;
 
-import AT.MSev.Mango.MangoUtils;
-import AT.MSev.Mango.NBTManager;
+import AT.MSev.Mango_Core.Utils.MangoUtils;
+import AT.MSev.Mango_Core.Utils.NBTManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagString;
